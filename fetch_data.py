@@ -3,18 +3,18 @@ import sqlite3
 import datetime
 import os
 
-# --- CONFIGURATION (Absolute Paths for Automation) ---
+# stuff we need for paths and config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'sbb.db')
 
-STATION_NAME = 'Zürich HB' # Change this if you want (e.g., 'Bern', 'Basel SBB')
+STATION_NAME = 'Zürich HB' # TODO: maybe make this configurable later?
 API_URL = f"http://transport.opendata.ch/v1/stationboard?station={STATION_NAME}&limit=15"
 
 def init_db():
-    """Create Database and Tables if they don't exist"""
+    # sets up the database if it doesn't exist yet
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        # Table 1: Static Station Info
+        # first table is for station info
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS stations (
                 id TEXT PRIMARY KEY,
@@ -23,7 +23,7 @@ def init_db():
                 y REAL
             )
         ''')
-        # Table 2: Departures Log
+        # second table stores all the departure times
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS departures (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,24 +40,24 @@ def init_db():
 
 def fetch_and_store():
     try:
-        # 1. Fetch from API
+        # grab data from the SBB API
         response = requests.get(API_URL)
         data = response.json()
 
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
 
-            # 2. Store Station Data (Upsert)
+            # save station info (replaces if already exists)
             s = data['station']
             cursor.execute("INSERT OR REPLACE INTO stations VALUES (?, ?, ?, ?)",
                            (s['id'], s['name'], s['coordinate']['x'], s['coordinate']['y']))
 
-            # 3. Store Departures
+            # now loop through all trains and save them
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             count = 0
             for train in data['stationboard']:
                 delay = train['stop']['delay']
-                if delay is None: delay = 0
+                if delay is None: delay = 0  # some trains don't have delay info
                 
                 cursor.execute('''
                     INSERT INTO departures (timestamp, destination, category, train_nr, delay, station_id)

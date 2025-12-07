@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# Absolute Path
+# need to use absolute path or flask gets confused
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'sbb.db')
 
@@ -17,11 +17,11 @@ def get_db():
 def index():
     conn = get_db()
     
-    # 1. Get Start Date
+    # figure out when we started collecting data
     start_row = conn.execute('SELECT MIN(timestamp) as start_time FROM departures').fetchone()
     start_date = start_row['start_time'] if start_row['start_time'] else "No data yet"
 
-    # 2. Query Destinations (Frequency)
+    # get the most popular destinations
     destinations = conn.execute('''
         SELECT destination, COUNT(*) as frequency 
         FROM departures 
@@ -48,7 +48,7 @@ def index():
 def reset_data():
     try:
         conn = get_db()
-        conn.execute('DELETE FROM departures') # Clear logs
+        conn.execute('DELETE FROM departures') # wipe everything from the table
         conn.commit()
         conn.close()
         return jsonify({'status': 'success'})

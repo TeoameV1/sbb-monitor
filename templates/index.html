@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>SBB Project Dashboard</title>
-    <!-- Auto Refresh every 60 seconds -->
+    <!-- page reloads every minute to get new data -->
     <meta http-equiv="refresh" content="60"> 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* --- CSS VARIABLES --- */
+        /* color scheme for light mode */
         :root {
             --bg-color: #f4f4f9;
             --text-color: #333;
@@ -27,7 +27,7 @@
             --meta-color: #aaa;
         }
 
-        /* --- LAYOUT --- */
+        /* basic reset and layout stuff */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
@@ -41,7 +41,7 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* LEFT PANEL */
+        /* left side takes up most of the screen */
         .left-panel {
             width: 65%;
             padding: 25px;
@@ -85,7 +85,7 @@
 
         h3 { text-align: center; margin-bottom: 10px; font-weight: 500; }
 
-        /* RIGHT PANEL */
+        /* smaller right side for the pie chart */
         .right-panel {
             width: 35%;
             padding: 25px;
@@ -93,7 +93,7 @@
             flex-direction: column;
         }
 
-        /* --- CONTROLS CONTAINER --- */
+        /* buttons and dark mode toggle at the bottom left */
         .controls-container {
             position: fixed;
             bottom: 25px;
@@ -176,10 +176,10 @@
     </div>
 
     <script>
-        // Chart Instances
+        // global variables for the charts
         let barChart, pieChart;
 
-        // --- 1. INITIAL THEME SETUP ---
+        // check if user already picked dark mode before
         const currentTheme = localStorage.getItem('theme');
         let initialColor = '#666';
         let initialGridColor = 'rgba(128,128,128,0.1)';
@@ -195,7 +195,7 @@
         Chart.defaults.font.family = "'Segoe UI', sans-serif";
         Chart.defaults.maintainAspectRatio = false;
 
-        // --- 2. DATA ---
+        // data from Flask backend
         const dData = {{ d_data | tojson }};
         const tData = {{ t_data | tojson }};
 
@@ -207,7 +207,7 @@
             return colors[type] || '#7f8c8d'; 
         }
 
-        // --- 3. CREATE CHARTS ---
+        // setup the bar chart for destinations
         barChart = new Chart(document.getElementById('barChart'), {
             type: 'bar',
             data: {
@@ -251,7 +251,7 @@
             }
         });
 
-        // --- 4. FUNCTIONS ---
+        // handle dark mode switch
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -260,7 +260,7 @@
             const newGridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(128,128,128,0.1)';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
 
-            // Force Chart Update
+            // update chart colors manually since Chart.js doesn't do it automatically
             barChart.options.scales.y.grid.color = newGridColor;
             barChart.options.scales.y.ticks.color = newColor;
             barChart.options.scales.x.ticks.color = newColor;
