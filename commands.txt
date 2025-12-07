@@ -1,0 +1,51 @@
+mkdir ~/sbb_project
+cd ~/sbb_project
+
+python3 -m venv venv
+source venv/bin/activate
+
+sudo apt install python3-pip python3-venv sqlite3 -y
+pip install requests flask
+
+nano ~/sbb_project/fetch_data.py
+
+nano ~/sbb_project/server.py
+
+mkdir -p ~/sbb_project/templates
+nano ~/sbb_project/templates/index.html
+
+
+whoami
+
+
+
+crontab -e
+add this line:
+* * * * * /home/YOUR_USER/sbb_project/venv/bin/python3 /home/YOUR_USER/sbb_project/fetch_data.py
+
+
+
+sudo nano /etc/systemd/system/sbb-dashboard.service
+
+
+[Unit]
+Description=SBB Web Dashboard
+After=network.target
+
+[Service]
+User=YOUR_USER
+WorkingDirectory=/home/YOUR_USER/sbb_project
+ExecStart=/home/YOUR_USER/sbb_project/venv/bin/python3 server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now sbb-dashboard
+
+
+
+http://localhost:5000
