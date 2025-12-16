@@ -18,8 +18,17 @@ def index():
     conn = get_db()
     
     # figure out when we started collecting data
-    start_row = conn.execute('SELECT MIN(timestamp) as start_time FROM departures').fetchone()
-    start_date = start_row['start_time'] if start_row['start_time'] else "No data yet"
+    start_row = conn.execute(
+        'SELECT MIN(departure_ts) AS start_ts FROM departures'
+    ).fetchone()
+
+    if start_row['start_ts']:
+        start_date = sqlite3.datetime.datetime.fromtimestamp(
+            start_row['start_ts']
+        ).strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        start_date = "No data yet"
+	
 
     # get the most popular destinations
     destinations = conn.execute('''
